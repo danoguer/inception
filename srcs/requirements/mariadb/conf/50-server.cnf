@@ -1,0 +1,15 @@
+[mysqld]
+# The Linux user that runs the database process
+user = mysql
+
+# The standard internal port for MariaDB/MySQL
+port = 3306
+
+# Default is 127.0.0.1 (localhost only). 
+# We change it to 0.0.0.0 to allow WordPress (which is in a different container) 
+# to connect across the internal Docker network.
+bind-address = 0.0.0.0
+
+datadir = /var/lib/mysql
+socket = /run/mysqld/mysqld.sock
+pid-file = /run/mysqld/mysqld.pid
