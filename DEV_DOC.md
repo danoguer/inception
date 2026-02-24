@@ -1,4 +1,4 @@
-# 🛠️ Developer Documentation (DEV_DOC)
+# 🛠️ Developer Documentation
 
 ## 🏗️ Environment Setup
 

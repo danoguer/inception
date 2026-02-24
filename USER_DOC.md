@@ -5,25 +5,25 @@ This document provides essential information for operating, managing, and access
 ---
 
 ## 🛠️ Provided Services
-**WordPress** | Main Content Management System (CMS). |
+WordPress | Main Content Management System (CMS). |
 https://danoguer.42.fr
 
-**WordPress admin**
+WordPress Admin |
 https://danoguer.42.fr/wp-admin
 
-**Static Site** | Lightweight static landing page. |
+Static Site | Lightweight static landing page. |
 https://danoguer.42.fr/portfolio
 
-**Adminer** | Web-based Database Management tool. |
+Adminer | Web-based Database Management tool. |
 https://danoguer.42.fr/adminer
 
-**cAdvisor** | Real-time resource usage and container monitoring. |
+cAdvisor | Real-time resource usage and container monitoring. |
 https://danoguer.42.fr/cadvisor	
 
-**Redis** | High-speed object caching for WordPress performance. |
+Redis | High-speed object caching for WordPress performance. |
 https://danoguer.42.fr/wp-admin -> Plugins Menu
 
-**FTP** | File Transfer Protocol for direct file management. |
+FTP | File Transfer Protocol for direct file management. |
 `ftp https://danoguer.42.fr`
 ---
 
@@ -41,6 +41,7 @@ To stop the services while keeping the data intact:
 `make stop`
 
 To shut down and remove the containers.
+
 `make down`
 
 
@@ -75,6 +76,7 @@ FTP_PASSWORD=password
 1. Visual Health Check
 
 Access cAdvisor at https://danoguer.42.fr/cadvisor to monitor CPU, memory, and network usage for every individual container.
+
 2. Terminal Status Check
 
 To see a quick overview of which services are up or down:
