@@ -13,7 +13,15 @@ WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server f
 
 MariaDB: The relational database management system, isolated within a private network.
 
-Bonus Services: A suite of additional tools including Redis (caching), FTP (file transfer), Adminer (DB management), cAdvisor (monitoring), and a Static Website.
+Redis: An in-memory NoSQL database used as an Object Cache for WordPress to reduce database load and significantly increase page response speeds.
+
+FTP: A dedicated file transfer service allowing administrators to securely upload and manage website files directly on the WordPress volume.
+
+Adminer: A lightweight, web-based database management tool that provides a graphical interface to inspect and manage the MariaDB tables without using the CLI.
+
+cAdvisor: A monitoring tool developed by Google that provides real-time analytics on resource usage (CPU, RAM, Network) for every individual container in the stack.
+
+Static Website: A fast-loading, independent landing page served directly by NGINX to demonstrate multi-service routing and high-performance static delivery.
 
 
 ### ⚙️ Key Constraints & Philosophy
@@ -149,11 +157,21 @@ Service	URL	Protocol
 
 WordPress	https://danoguer.42.fr	HTTPS (443)
 
-Adminer	https://danoguer.42.fr/adminer	HTTPS (443)
-
 Static Site	https://danoguer.42.fr/static	HTTPS (443)
 
-Cadvisor	https://danoguer.42.fr/cadvisor	HTTPS (443)
+Cadvisor https://danoguer.42.fr/cadvisor	HTTPS (443)
+
+Adminer	https://danoguer.42.fr/adminer	HTTPS (443)
+
+```bash
+# System MySQL
+# Server mariadb
+# Username ${SQL_USER}
+# Password ${SQL_PASSWORD}
+# Database ${SQL_DATABASE}
+```
+
+FTP `ftp https://danoguer.42.fr`
 
 [!CAUTION]
 Since we use self-signed SSL certificates, your browser will show a security warning. Click "Advanced" → "Proceed".
@@ -169,7 +187,7 @@ Restart services:
 
 `make re`
 
-Full Cleanup:
+Full Cleanup: **it removes everything including the folders on the host, like /home/user/data**
 
 `make fclean` (Warning: Removes containers, images, and volumes).
 
