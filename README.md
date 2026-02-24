@@ -7,104 +7,106 @@ This project was created by danoguer as part of the 42 curriculum.
 It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
 The core of the project is a LEMP-style stack orchestrated via Docker Compose. The architecture is divided into several dedicated microservices:
 
-    NGINX: The only entry point to the infrastructure, strictly serving traffic over TLS v1.2/v1.3 to ensure security.
+NGINX: The only entry point to the infrastructure, strictly serving traffic over TLS v1.2/v1.3 to ensure security.
 
-    WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server for better scalability.
+WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server for better scalability.
 
-    MariaDB: The relational database management system, isolated within a private network.
+MariaDB: The relational database management system, isolated within a private network.
 
-    Bonus Services: A suite of additional tools including Redis (caching), FTP (file transfer), Adminer (DB management), cAdvisor (monitoring), and a Static Website.
+Bonus Services: A suite of additional tools including Redis (caching), FTP (file transfer), Adminer (DB management), cAdvisor (monitoring), and a Static Website.
 
 ⚙️ Key Constraints & Philosophy
 
 This project is built following the "Everything-from-Scratch" philosophy required by the 42 pedagogy:
 
-    Base OS: Every container is built using a minimal Debian (Bookworm) or Alpine image.
+Base OS: Every container is built using a minimal Debian (Bookworm) or Alpine image.
 
-    No Pre-built Images: Using image: wordpress or image: mariadb from Docker Hub is forbidden. Every service is custom-built via a specific Dockerfile.
+No Pre-built Images: Using image: wordpress or image: mariadb from Docker Hub is forbidden. Every service is custom-built via a specific Dockerfile.
 
-    Networking: All services communicate over a dedicated internal bridge network, with only NGINX exposing public ports.
+Networking: All services communicate over a dedicated internal bridge network, with only NGINX exposing public ports.
 
-    Data Persistence: Critical data is managed through Docker volumes mapped to specific host paths, ensuring that the infrastructure is stateless but the data is permanent.
+Data Persistence: Critical data is managed through Docker volumes mapped to specific host paths, ensuring that the infrastructure is stateless but the data is permanent.
 
 🏗️ Design Choices
 
-    Microservices Architecture: Instead of a "Monolithic" approach, each service runs in its own isolated container. This follows the principle of Single Responsibility, making the system easier to debug and scale.
+Microservices Architecture: Instead of a "Monolithic" approach, each service runs in its own isolated container. This follows the principle of Single Responsibility, making the system easier to debug and scale.
 
-    Manual Orchestration: By avoiding pre-made Docker Hub images, we maintain total control over binary versions (e.g., PHP 8.2, MariaDB 10.11) and security patches.
+Manual Orchestration: By avoiding pre-made Docker Hub images, we maintain total control over binary versions (e.g., PHP 8.2, MariaDB 10.11) and security patches.
 
-    Least Privilege: Services run as non-root users where possible (e.g., www-data for PHP), and only the NGINX container is permitted to communicate with the outside world.
+Least Privilege: Services run as non-root users where possible (e.g., www-data for PHP), and only the NGINX container is permitted to communicate with the outside world.
 
 # ⚖️ Technical Comparisons
 
 
 🖥️ Docker vs Virtual Machine
 
-    Architecture: VMs use a Hypervisor to emulate physical hardware; Docker uses the Docker Engine to interface with the Host OS.
+Architecture: VMs use a Hypervisor to emulate physical hardware; Docker uses the Docker Engine to interface with the Host OS.
 
-    Kernel: Each VM boots its own Guest OS Kernel; all Docker containers share the single Host OS Kernel.
+Kernel: Each VM boots its own Guest OS Kernel; all Docker containers share the single Host OS Kernel.
 
-    Isolation Mechanism: VMs provide Hardware-level isolation (secure but heavy); Docker uses Namespaces and Cgroups for process-level isolation (fast but shared).
+Isolation Mechanism: VMs provide Hardware-level isolation (secure but heavy); Docker uses Namespaces and Cgroups for process-level isolation (fast but shared).
 
-    Resource Payload: VMs include a full OS (drivers, binaries, kernel), costing GBs; Docker includes only the app and its libraries, costing MBs.
+Resource Payload: VMs include a full OS (drivers, binaries, kernel), costing GBs; Docker includes only the app and its libraries, costing MBs.
 
-    Startup: VMs undergo a full BIOS/OS boot sequence (minutes); Docker starts as a forked process (milliseconds).
+Startup: VMs undergo a full BIOS/OS boot sequence (minutes); Docker starts as a forked process (milliseconds).
 
-    Efficiency: VMs have high overhead due to redundant OS tasks; Docker runs at near-native speed with zero hardware emulation tax.
+Efficiency: VMs have high overhead due to redundant OS tasks; Docker runs at near-native speed with zero hardware emulation tax.
 
 🔐 Secrets vs. Environment Variables
 
-    Environment Variables: Easily visible via docker inspect. Suitable for non-sensitive config.
+Environment Variables: Easily visible via docker inspect. Suitable for non-sensitive config.
 
-    Secrets: Managed in memory at runtime (Swarm/K8s). For this project, we utilize .env files to simulate secure credential injection.
+Secrets: Managed in memory at runtime (Swarm/K8s). For this project, we utilize .env files to simulate secure credential injection.
 
 🌐 Docker Network vs. Host Network
 
-    Host Network: Shares the host's IP/ports. Zero isolation.
+Host Network: Shares the host's IP/ports. Zero isolation.
 
-    Docker Bridge Network: Private virtual network. Containers use service names (DNS) for internal talk, remaining invisible to the outside world.
+Docker Bridge Network: Private virtual network. Containers use service names (DNS) for internal talk, remaining invisible to the outside world.
 
 💾 Docker Volumes vs. Bind Mounts
 
-    Docker Volumes: Managed by Docker in /var/lib/docker/volumes/. Best for production.
+Docker Volumes: Managed by Docker in /var/lib/docker/volumes/. Best for production.
 
-    Bind Mounts: Maps a specific host path to the container. Used here to satisfy the requirement of storing data in a specific host directory for evaluation.
+Bind Mounts: Maps a specific host path to the container. Used here to satisfy the requirement of storing data in a specific host directory for evaluation.
 
 # 🚀 Instructions
 
 
 📋 Prerequisites
 
-    OS: Linux (Debian Bookworm preferred).
+OS: Linux (Debian Bookworm preferred).
 
-    Tools: docker, docker-compose, and make.
+Tools: docker, docker-compose, and make.
 
-    Permissions: sudo privileges are required.
+Permissions: sudo privileges are required.
 
 🔧 1. Host Configuration
 
 Map your local loopback address to the project domain in your /etc/hosts file:
-Bash
 
-echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts
+
+`echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts`
 
 📂 2. Persistent Storage Setup
 
 Create the volume directories
-sudo mkdir -p /home/$USER/data/mariadb
-sudo mkdir -p /home/$USER/data/wordpress
+
+`sudo mkdir -p /home/$USER/data/mariadb`
+
+`sudo mkdir -p /home/$USER/data/wordpress`
 
 🔐 3. Environment Variables
 
 Ensure you have a .env file in the root directory with the following (refer to .env.example):
 
-    MYSQL_ROOT_PASSWORD
+SQL_ROOT_PASSWORD
 
-    MYSQL_USER / MYSQL_PASSWORD
+SQL_USER / SQL_PASSWORD
 
-    DOMAIN_NAME (e.g., danoguer.42.fr)
+DOMAIN_NAME (e.g., danoguer.42.fr)
 
-    WP_ADMIN_USER / WP_ADMIN_PASSWORD
+WP_ADMIN_USER / WP_ADMIN_PASSWORD
 
 🛠️ 4. Installation & Launch
 
@@ -118,21 +120,31 @@ Check the status of the services
 
 🌐 5. Accessing the Services
 Service	URL	Protocol
+
 WordPress	https://danoguer.42.fr	HTTPS (443)
+
 Adminer	https://danoguer.42.fr/adminer	HTTPS (443)
+
 Static Site	https://danoguer.42.fr/static	HTTPS (443)
+
 Cadvisor	https://danoguer.42.fr/cadvisor	HTTPS (443)
 
-    [!CAUTION]
-    Since we use self-signed SSL certificates, your browser will show a security warning. Click "Advanced" → "Proceed".
+[!CAUTION]
+Since we use self-signed SSL certificates, your browser will show a security warning. Click "Advanced" → "Proceed".
 
 🧹 6. Maintenance
 
-    Stop services: make stop
+Stop services: 
 
-    Restart services: make re
+`make stop`
 
-    Full Cleanup: make fclean (Warning: Removes containers, images, and volumes).
+Restart services: 
+
+`make re`
+
+Full Cleanup:
+
+`make fclean` (Warning: Removes containers, images, and volumes).
 
 🤖 AI Usage Disclosure
 
@@ -140,14 +152,14 @@ In the spirit of transparency, this project utilized Gemini as a technical consu
 
 Assisted Tasks:
 
-    Infrastructure Debugging: Resolved MariaDB InnoDB redo log mismatches during the Debian Bullseye to Bookworm migration.
+Infrastructure Debugging: Resolved MariaDB InnoDB redo log mismatches during the Debian Bullseye to Bookworm migration.
 
-    Script Optimization: Wrote idempotent setup.sh scripts using mysqladmin ping for service orchestration.
+Script Optimization: Wrote idempotent setup.sh scripts using mysqladmin ping for service orchestration.
 
-    Configuration Review: Audited www.conf and 50-server.cnf for "least privilege" compliance.
+Configuration Review: Audited www.conf and 50-server.cnf for "least privilege" compliance.
 
 Manually Implemented (No AI):
 
-    System Architecture Design: Core logic and volume mapping based on Inception requirements.
+System Architecture Design: Core logic and volume mapping based on Inception requirements.
 
-    Security Implementation: TLS protocol selection and network isolation strategy.
+Security Implementation: TLS protocol selection and network isolation strategy.
