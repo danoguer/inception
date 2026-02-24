@@ -7,6 +7,20 @@ This project was created by danoguer as part of the 42 curriculum.
 It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
 The core of the project is a LEMP-style stack orchestrated via Docker Compose. The architecture is divided into several dedicated microservices:
 
+### 🔄 Request Lifecycle
+
+1. User requests https://danoguer.42.fr.
+
+2. NGINX (Port 443) intercepts the request and handles SSL termination.
+
+3. If it's a PHP request, NGINX forwards it to WordPress (Port 9000) via the FastCGI protocol.
+
+4. WordPress communicates with MariaDB (Port 3306) or checks the Redis cache (Port 6379).
+
+5. The result is sent back through NGINX to the user.
+
+### 🗄️ Every Service 
+
 NGINX: The only entry point to the infrastructure, strictly serving traffic over TLS v1.2/v1.3 to ensure security.
 
 WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server for better scalability.
@@ -187,9 +201,9 @@ Restart services:
 
 `make re`
 
-Full Cleanup: **it removes everything including the folders on the host, like /home/user/data**
+Full Cleanup: it removes everything including the folders on the host, like /home/user/data**
 
-`make fclean` (Warning: Removes containers, images, and volumes).
+`make fclean`
 
 
 ## 📚 Resources
