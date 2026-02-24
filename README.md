@@ -100,13 +100,13 @@ Create the volume directories
 
 Ensure you have a .env file in the root directory with the following (refer to .env.example):
 
-SQL_ROOT_PASSWORD
+`SQL_ROOT_PASSWORD`
 
-SQL_USER / SQL_PASSWORD
+`SQL_USER / SQL_PASSWORD`
 
-DOMAIN_NAME (e.g., danoguer.42.fr)
+`DOMAIN_NAME (e.g., danoguer.42.fr)`
 
-WP_ADMIN_USER / WP_ADMIN_PASSWORD
+`WP_ADMIN_USER / WP_ADMIN_PASSWORD`
 
 🛠️ 4. Installation & Launch
 
@@ -145,6 +145,17 @@ Restart services:
 Full Cleanup:
 
 `make fclean` (Warning: Removes containers, images, and volumes).
+
+
+#📚 Resources
+
+Docker Official Documentation
+
+NGINX Core Functionality
+
+MariaDB Knowledge Base
+
+Mozilla SSL Configuration Generator
 
 🤖 AI Usage Disclosure
 
