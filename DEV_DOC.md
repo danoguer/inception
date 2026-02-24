@@ -1,66 +1,79 @@
-Developer Documentation - Infrastructure Configuration
-Environment Setup
-Prerequisites
+# 🛠️ Developer Documentation (DEV_DOC)
 
-    Virtual Machine: Debian (penultimate stable version).
+## 🏗️ Environment Setup
 
-Tools: Docker Engine, Docker Compose, and make.
+### 1. Prerequisites
+To replicate this environment, the host machine must have:
+* **Linux Kernel**: (Debian 12 Bookworm recommended).
+* **Docker Engine**: v24.0+
+* **Docker Compose**: v2.20+ (V2 plugin syntax: `docker compose`).
+* **Make**: GNU Make.
+* Host Mapping: echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts
 
-DNS Configuration: Map 127.0.0.1 to danoguer.42.fr in the host's /etc/hosts file.
+### 2. Build and launch the project
 
-Configuration
+1. Secret Management (.env)
 
-    Automated Setup: The Makefile is designed to automatically create the required directory structure at /home/danoguer/data/.
-
-Environment: Manually create the srcs/.env file based on the template before the first build.
-
-Building and Launching
-
-The project lifecycle is fully automated via the root Makefile:
-
-    make: Creates host data directories, builds custom Docker images, and launches the stack.
-
-    make re: Forces a full rebuild of the infrastructure without using cache.
-
-Data Persistence
-
-Data is stored using Docker Named Volumes. To meet project requirements, these volumes are mapped to the host's physical storage:
-
-    Database: /home/danoguer/data/mariadb.
-
-Website Files: /home/danoguer/data/wordpress.
-
-Security Requirements
-
-    No "Hacky" Patches: No container uses tail -f, sleep infinity, or infinite loops as an entry point.
-
-Strict TLS: NGINX is restricted to TLS v1.2 or v1.3 only.
-
-User Privileges: The WordPress administrator username cannot contain "admin" or "administrator".
-
-Network Isolation: All containers communicate via a dedicated internal bridge network.
-
-.env File Syntax
-
-Before building, you must create a file named .env in the srcs/ directory. The Makefile and docker-compose.yml rely on the following variable structure:
-
+Developers must create a .env file in the srcs/ directory. This file is parsed by Docker Compose and injected into the containers.
+```bash
 # Domain & Infrastructure
-DOMAIN_NAME=danoguer.42.fr
+DOMAIN_NAME=example.42.fr
 
 # Database Configuration
 SQL_USER=user
-SQL_PASSWORD=your_secure_password
-SQL_ROOT_PASSWORD=your_root_password
+SQL_PASSWORD=password
+SQL_ROOT_PASSWORD=rootpassword
 SQL_DATABASE=wordpress
 
 # WordPress Configuration
-WP_ADMIN_USER=wp_manager
-WP_ADMIN_PASSWORD=admin_password
-WP_USER=wp_visitor
-WP_USER_PASSWORD=visitor_password
+WP_ADMIN_USER=adminuser
+WP_ADMIN_PASSWORD=password
+WP_ADMIN_EMAIL=example@student.42madrid.com
+WP_USER=user
+WP_USER_PASSWORD=user1234
 
-# Bonus: FTP & Redis
-FTP_USER=danogueruser
-FTP_PASSWORD=ftp_password
+# FTP
+FTP_USER=user
+FTP_PASSWORD=password
+```
 
-Note: As per security requirements, the WordPress administrator username must not contain "admin" or "administrator".
+2. Build & Deployment Logic
+
+The project utilizes a Makefile to abstract complex Docker commands.
+
+Useful Developer Commands
+```bash
+# Full Build	
+make up
+# Stop & Remove	
+make down
+# Removes containers and unused images.
+make clean
+# Full Data Reset
+make fclean
+# Turn everything off and on again
+make re
+# Clean Volumes	
+docker volume rm $(docker volume ls -q)
+# Access Shell	
+docker exec -it <container_name> /bin/bash
+# Check Network	
+docker network inspect inception
+```
+
+
+💾 Data Persistence & Storage
+
+Understanding where data lives is critical for debugging "stateless" containers.
+1. Volume Mapping (Bind Mounts)
+
+Per project requirements, we use Bind Mounts to map container directories to the host filesystem. This ensures that even if a container is deleted, the data remains on the host.
+Container Path	Host Path (Local)	Data Type
+/var/lib/mysql	/home/danoguer/data/mariadb	SQL Tables, Logs, Binary Logs
+/var/www/html	/home/danoguer/data/wordpress	PHP scripts, Plugins, Uploads
+
+2. Persistence Mechanism
+
+    MariaDB: The setup.sh script checks for the existence of /var/lib/mysql/mysql. If missing, it runs the initialization bootstrap. If it exists, it skips setup to preserve existing data.
+
+    WordPress: The setup.sh checks for wp-config.php. If present, it assumes an existing installation and only starts php-fpm.

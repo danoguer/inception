@@ -1,56 +1,98 @@
-User Documentation - Inception Infrastructure
-Services Overview
+# 📖 User & Administrator Documentation
 
-This infrastructure provides a secure, containerized web stack consisting of:
+This document provides essential information for operating, managing, and accessing the Inception infrastructure.
 
-WordPress: The primary CMS for content management.
+---
 
-NGINX: The secure entry point for all traffic (TLS v1.2/v1.3).
+## 🛠️ Provided Services
+**WordPress** | Main Content Management System (CMS). |
+https://danoguer.42.fr
 
-MariaDB: The relational database for persistent data storage.
+**WordPress admin**
+https://danoguer.42.fr/wp-admin
 
-Redis (Bonus): Object cache to speed up WordPress performance.
+**Static Site** | Lightweight static landing page. |
+https://danoguer.42.fr/portfolio
 
-FTP (Bonus): Secure file transfer access to the WordPress content volume.
+**Adminer** | Web-based Database Management tool. |
+https://danoguer.42.fr/adminer
 
-Adminer (Bonus): A web-based interface for database management.
+**cAdvisor** | Real-time resource usage and container monitoring. |
+https://danoguer.42.fr/cadvisor	
 
-Static Website (Bonus): A resume/showcase site built in HTML/CSS.
+**Redis** | High-speed object caching for WordPress performance. |
+https://danoguer.42.fr/wp-admin -> Plugins Menu
 
-Cadvisor (Bonus): To check every information about the containers.
+**FTP** | File Transfer Protocol for direct file management. |
+`ftp https://danoguer.42.fr`
+---
 
-Operations
+## 🚦 System Operations
 
-Starting and Stopping 
+⏺️ Starting the Project
+To initialize and launch the infrastructure, navigate to the project root and run:
 
-    Launch: Run make in the root directory. This builds and starts all services in detached mode.
+`make`
 
-    Stop: Run make down to stop and remove containers while keeping volumes intact.
+⏹️ Stopping the Project
 
-    Full Reset: Run make fclean to remove everything, including persistent volumes and networks.
+To stop the services while keeping the data intact:
 
-Accessing the Website 
+`make stop`
 
-    Main Site: https://danoguer.42.fr
+To shut down and remove the containers.
+`make down`
 
-    Admin Panel: https://danoguer.42.fr/wp-admin
 
-    Adminer: https://danoguer.42.fr/adminer
+🔑 Credential Management
 
-    Static Site: https://danoguer.42.fr/portfolio
+You have to create a .env file following this syntax:
 
-    Cadvisor: https://danoguer.42.fr/cadvisor
+```bash
+# Domain & Infrastructure
+DOMAIN_NAME=example.42.fr
 
-Credential Management 
+# Database Configuration
+SQL_USER=user
+SQL_PASSWORD=password
+SQL_ROOT_PASSWORD=rootpassword
+SQL_DATABASE=wordpress
 
-All passwords and sensitive keys are managed via a .env file located in the srcs/ directory. For the defense, these credentials are kept local and are never pushed to Git.
+# WordPress Configuration
+WP_ADMIN_USER=adminuser
+WP_ADMIN_PASSWORD=password
+WP_ADMIN_EMAIL=example@student.42madrid.com
+WP_USER=user
+WP_USER_PASSWORD=user1234
 
-Health Check 
+# FTP
+FTP_USER=user
+FTP_PASSWORD=password
+```
 
-To verify services are running:
 
-docker ps: Lists all active containers. All should show a status of "Up".
+🩺 Health & Monitoring
+1. Visual Health Check
 
-docker network ls: Ensures the inception_network is created.
+Access cAdvisor at https://danoguer.42.fr/cadvisor to monitor CPU, memory, and network usage for every individual container.
+2. Terminal Status Check
 
-docker volume ls: Ensures mariadb_data and wordpress_data are present.
+To see a quick overview of which services are up or down:
+
+`docker ps`
+
+3. Log Inspection
+
+If a service is not responding correctly, inspect the live logs:
+
+```bash
+# General logs
+docker compose logs -f
+
+# Specific service logs (e.g., MariaDB)
+docker logs mariadb
+```
+
+🏛️ Support
+
+For technical issues regarding the architecture, refer to the DEV.md file. For deployment issues, ensure Docker is running and the .env file is properly formatted.

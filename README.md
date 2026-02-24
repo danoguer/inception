@@ -108,15 +108,29 @@ Create the volume directories
 
 🔐 3. Environment Variables
 
-Ensure you have a .env file in the root directory with the following (refer to .env.example):
+Ensure you create a .env file in the root directory with the following (refer to .env.example):
 
-`SQL_ROOT_PASSWORD`
+```bash
+# Domain & Infrastructure
+DOMAIN_NAME=example.42.fr
 
-`SQL_USER / SQL_PASSWORD`
+# Database Configuration
+SQL_USER=user
+SQL_PASSWORD=password
+SQL_ROOT_PASSWORD=rootpassword
+SQL_DATABASE=wordpress
 
-`DOMAIN_NAME (e.g., danoguer.42.fr)`
+# WordPress Configuration
+WP_ADMIN_USER=adminuser
+WP_ADMIN_PASSWORD=password
+WP_ADMIN_EMAIL=example@student.42madrid.com
+WP_USER=user
+WP_USER_PASSWORD=user1234
 
-`WP_ADMIN_USER / WP_ADMIN_PASSWORD`
+# FTP
+FTP_USER=user
+FTP_PASSWORD=password
+```
 
 
 🛠️ 4. Installation & Launch
