@@ -109,10 +109,12 @@ Ensure you have a .env file in the root directory with the following (refer to .
 🛠️ 4. Installation & Launch
 
 Build and start all containers
-'make'
+
+`make`
 
 Check the status of the services
-'docker ps'
+
+`docker ps`
 
 🌐 5. Accessing the Services
 Service	URL	Protocol
