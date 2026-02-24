@@ -1,9 +1,10 @@
-🐳 Inception
+# 🐳 Inception
 
-This project was created by danoguer as part of the 42 curriculum. It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
-🌐 Description
-🏗️ The Infrastructure
+This project was created by danoguer as part of the 42 curriculum.
 
+
+# 🌐 Description
+It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
 The core of the project is a LEMP-style stack orchestrated via Docker Compose. The architecture is divided into several dedicated microservices:
 
     NGINX: The only entry point to the infrastructure, strictly serving traffic over TLS v1.2/v1.3 to ensure security.
@@ -34,12 +35,23 @@ This project is built following the "Everything-from-Scratch" philosophy require
 
     Least Privilege: Services run as non-root users where possible (e.g., www-data for PHP), and only the NGINX container is permitted to communicate with the outside world.
 
-⚖️ Technical Comparisons
-Feature	Virtual Machines	Docker (Containers)
-Virtualization	Hardware level	OS Kernel level
-Weight	Heavy (Full OS + Virtual HW)	Lightweight (Shared Kernel)
-Boot Time	Minutes	Seconds
-Efficiency	High overhead	Minimal overhead
+# ⚖️ Technical Comparisons
+
+
+🖥️ Docker vs Virtual Machine
+
+    Architecture: VMs use a Hypervisor to emulate physical hardware; Docker uses the Docker Engine to interface with the Host OS.
+
+    Kernel: Each VM boots its own Guest OS Kernel; all Docker containers share the single Host OS Kernel.
+
+    Isolation Mechanism: VMs provide Hardware-level isolation (secure but heavy); Docker uses Namespaces and Cgroups for process-level isolation (fast but shared).
+
+    Resource Payload: VMs include a full OS (drivers, binaries, kernel), costing GBs; Docker includes only the app and its libraries, costing MBs.
+
+    Startup: VMs undergo a full BIOS/OS boot sequence (minutes); Docker starts as a forked process (milliseconds).
+
+    Efficiency: VMs have high overhead due to redundant OS tasks; Docker runs at near-native speed with zero hardware emulation tax.
+
 🔐 Secrets vs. Environment Variables
 
     Environment Variables: Easily visible via docker inspect. Suitable for non-sensitive config.
@@ -58,7 +70,9 @@ Efficiency	High overhead	Minimal overhead
 
     Bind Mounts: Maps a specific host path to the container. Used here to satisfy the requirement of storing data in a specific host directory for evaluation.
 
-🚀 Instructions
+# 🚀 Instructions
+
+
 📋 Prerequisites
 
     OS: Linux (Debian Bookworm preferred).
@@ -75,9 +89,8 @@ Bash
 echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts
 
 📂 2. Persistent Storage Setup
-Bash
 
-# Create the volume directories
+Create the volume directories
 sudo mkdir -p /home/$USER/data/mariadb
 sudo mkdir -p /home/$USER/data/wordpress
 
@@ -94,13 +107,12 @@ Ensure you have a .env file in the root directory with the following (refer to .
     WP_ADMIN_USER / WP_ADMIN_PASSWORD
 
 🛠️ 4. Installation & Launch
-Bash
 
-# Build and start all containers
-make
+Build and start all containers
+'make'
 
-# Check the status of the services
-docker ps
+Check the status of the services
+'docker ps'
 
 🌐 5. Accessing the Services
 Service	URL	Protocol
