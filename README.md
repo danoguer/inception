@@ -1,46 +1,63 @@
-This looks like a solid, professional document. To make it "GitHub-viable," we need to utilize Markdown syntax effectively: using proper headers, code blocks with syntax highlighting, tables, and visual separators. This improves the scannability of the page, which is exactly what evaluators (and future recruiters) look for.
+🐳 Inception
 
-Here is your full document, formatted for a professional GitHub repository.
-Inception 🐳
-
-This project was developed as part of the 42 curriculum by danoguer. It focuses on systemic virtualization and the orchestration of a multi-container infrastructure.
+This project was created by danoguer as part of the 42 curriculum. It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
 🌐 Description
 🏗️ The Infrastructure
 
-The core of the project is a LEMP-style stack (Linux, NGINX, MariaDB, PHP-FPM) orchestrated via Docker Compose. The architecture is divided into dedicated microservices:
+The core of the project is a LEMP-style stack orchestrated via Docker Compose. The architecture is divided into several dedicated microservices:
 
-    NGINX: The primary entry point, strictly serving traffic over TLS v1.2/v1.3.
+    NGINX: The only entry point to the infrastructure, strictly serving traffic over TLS v1.2/v1.3 to ensure security.
 
-    WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server.
+    WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server for better scalability.
 
     MariaDB: The relational database management system, isolated within a private network.
 
-    Bonus Services: Includes Redis (caching), FTP (file transfer), Adminer (DB management), cAdvisor (monitoring), and a Static Website.
+    Bonus Services: A suite of additional tools including Redis (caching), FTP (file transfer), Adminer (DB management), cAdvisor (monitoring), and a Static Website.
 
 ⚙️ Key Constraints & Philosophy
 
+This project is built following the "Everything-from-Scratch" philosophy required by the 42 pedagogy:
+
     Base OS: Every container is built using a minimal Debian (Bookworm) or Alpine image.
 
-    No Pre-built Images: Every service is custom-built via a specific Dockerfile. Using image: wordpress is strictly forbidden.
+    No Pre-built Images: Using image: wordpress or image: mariadb from Docker Hub is forbidden. Every service is custom-built via a specific Dockerfile.
 
-    Networking: Communication occurs over a dedicated internal bridge network; only NGINX exposes public ports.
+    Networking: All services communicate over a dedicated internal bridge network, with only NGINX exposing public ports.
 
-    Data Persistence: Managed through Docker volumes mapped to specific host paths for permanent storage.
+    Data Persistence: Critical data is managed through Docker volumes mapped to specific host paths, ensuring that the infrastructure is stateless but the data is permanent.
 
 🏗️ Design Choices
 
-    Microservices: Isolated containers follow the principle of Single Responsibility, facilitating debugging and scaling.
+    Microservices Architecture: Instead of a "Monolithic" approach, each service runs in its own isolated container. This follows the principle of Single Responsibility, making the system easier to debug and scale.
 
-    Manual Orchestration: Total control over binary versions (PHP 8.2, MariaDB 10.11) and security patches.
+    Manual Orchestration: By avoiding pre-made Docker Hub images, we maintain total control over binary versions (e.g., PHP 8.2, MariaDB 10.11) and security patches.
 
-    Least Privilege: Services run as non-root users (e.g., www-data for PHP).
+    Least Privilege: Services run as non-root users where possible (e.g., www-data for PHP), and only the NGINX container is permitted to communicate with the outside world.
 
 ⚖️ Technical Comparisons
-Category	Option A	Option B
-Virtualization	Virtual Machines (VMs): Virtualize hardware. Resource-heavy and slow boot times.	Docker: Virtualizes the OS kernel. Lightweight, shares host kernel, fast boot.
-Secrets Management	Environment Variables: Easy to use but visible in process listings/inspect.	Secrets: Encrypted data only mounted in memory at runtime (Production standard).
-Network Type	Host Network: Shares host IP/ports directly. Zero isolation.	Bridge Network: Private virtual network. Isolation via DNS and port mapping.
-Storage Strategy	Docker Volumes: Managed by Docker in /var/lib/docker/. Preferred for production.	Bind Mounts: Specific host path bound to container. Used here for evaluation.
+Feature	Virtual Machines	Docker (Containers)
+Virtualization	Hardware level	OS Kernel level
+Weight	Heavy (Full OS + Virtual HW)	Lightweight (Shared Kernel)
+Boot Time	Minutes	Seconds
+Efficiency	High overhead	Minimal overhead
+🔐 Secrets vs. Environment Variables
+
+    Environment Variables: Easily visible via docker inspect. Suitable for non-sensitive config.
+
+    Secrets: Managed in memory at runtime (Swarm/K8s). For this project, we utilize .env files to simulate secure credential injection.
+
+🌐 Docker Network vs. Host Network
+
+    Host Network: Shares the host's IP/ports. Zero isolation.
+
+    Docker Bridge Network: Private virtual network. Containers use service names (DNS) for internal talk, remaining invisible to the outside world.
+
+💾 Docker Volumes vs. Bind Mounts
+
+    Docker Volumes: Managed by Docker in /var/lib/docker/volumes/. Best for production.
+
+    Bind Mounts: Maps a specific host path to the container. Used here to satisfy the requirement of storing data in a specific host directory for evaluation.
+
 🚀 Instructions
 📋 Prerequisites
 
@@ -48,11 +65,11 @@ Storage Strategy	Docker Volumes: Managed by Docker in /var/lib/docker/. Preferre
 
     Tools: docker, docker-compose, and make.
 
-    Permissions: sudo privileges for host file modification.
+    Permissions: sudo privileges are required.
 
 🔧 1. Host Configuration
 
-Map your local loopback address to the project domain in /etc/hosts:
+Map your local loopback address to the project domain in your /etc/hosts file:
 Bash
 
 echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts
@@ -66,7 +83,7 @@ sudo mkdir -p /home/$USER/data/wordpress
 
 🔐 3. Environment Variables
 
-Ensure a .env file exists in the root directory with the following:
+Ensure you have a .env file in the root directory with the following (refer to .env.example):
 
     MYSQL_ROOT_PASSWORD
 
@@ -90,41 +107,33 @@ Service	URL	Protocol
 WordPress	https://danoguer.42.fr	HTTPS (443)
 Adminer	https://danoguer.42.fr/adminer	HTTPS (443)
 Static Site	https://danoguer.42.fr/static	HTTPS (443)
-cAdvisor	https://danoguer.42.fr/cadvisor	HTTPS (443)
+Cadvisor	https://danoguer.42.fr/cadvisor	HTTPS (443)
 
-    Note: Self-signed SSL certificates will trigger a browser warning. Click Advanced -> Proceed.
+    [!CAUTION]
+    Since we use self-signed SSL certificates, your browser will show a security warning. Click "Advanced" → "Proceed".
 
-🧹 6. Maintenance & Cleanup
+🧹 6. Maintenance
 
-    Stop: make stop
+    Stop services: make stop
 
-    Restart: make re
+    Restart services: make re
 
-    Full Cleanup: make fclean (Warning: Removes volumes).
-
-📚 Resources
-
-    Docker Official Documentation
-
-    NGINX Core Functionality
-
-    MariaDB Knowledge Base
-
-    Mozilla SSL Configuration Generator
+    Full Cleanup: make fclean (Warning: Removes containers, images, and volumes).
 
 🤖 AI Usage Disclosure
 
-This project utilized Gemini as a technical consultant to accelerate the learning curve of DevOps best practices.
-🛠️ Tasks Assisted by AI
+In the spirit of transparency, this project utilized Gemini as a technical consultant to accelerate the learning curve of System Administration and DevOps.
 
-    Infrastructure Debugging: Resolving MariaDB InnoDB log mismatches during the Debian Bullseye to Bookworm migration.
+Assisted Tasks:
 
-    Script Optimization: Developing idempotent setup.sh scripts with authenticated loops.
+    Infrastructure Debugging: Resolved MariaDB InnoDB redo log mismatches during the Debian Bullseye to Bookworm migration.
 
-    Configuration Review: Auditing www.conf and 50-server.cnf for network binding and "least privilege."
+    Script Optimization: Wrote idempotent setup.sh scripts using mysqladmin ping for service orchestration.
 
-🚫 Parts NOT Generated by AI
+    Configuration Review: Audited www.conf and 50-server.cnf for "least privilege" compliance.
 
-    System Architecture: The overall logic and volume mapping were manually designed per subject requirements.
+Manually Implemented (No AI):
 
-    Security Implementation: Manual selection of TLS protocols and network isolation.
+    System Architecture Design: Core logic and volume mapping based on Inception requirements.
+
+    Security Implementation: TLS protocol selection and network isolation strategy.
