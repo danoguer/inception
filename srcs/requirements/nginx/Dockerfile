@@ -6,6 +6,7 @@ RUN apt-get update -y && \
     apt-get upgrade -y && \
     apt-get install -y nginx openssl && \
     rm -rf /var/lib/apt/lists/*
+    
 # 3. Create a folder to store the SSL certificates securely
 RUN mkdir -p /etc/nginx/ssl
 

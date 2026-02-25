@@ -9,7 +9,7 @@ chown -R mysql:mysql /var/lib/mysql
 if [ ! -d "/var/lib/mysql/$SQL_DATABASE" ]; then
     echo "Initializing MariaDB for the first time..."
 
-    # Start MariaDB temporarily in the background without networking for setup
+# Start MariaDB temporarily in the background without networking for setup
     mariadbd --user=mysql --bootstrap << EOF
 USE mysql;
 FLUSH PRIVILEGES;

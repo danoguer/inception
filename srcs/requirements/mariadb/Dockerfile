@@ -1,4 +1,4 @@
-# 1. The Base OS (The subject requires Debian penultimate stable or Alpine)
+# 1. The Base OS
 FROM debian:bookworm
 
 # 2. Update the package list and install MariaDB
