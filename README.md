@@ -2,6 +2,7 @@
 
 This project was created by danoguer as part of the 42 curriculum.
 
+Tecnical Blog of this project: https://42-journey.hashnode.dev/series/inception
 
 ## 🌐 Description
 It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
