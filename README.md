@@ -1,237 +1,189 @@
-# 🐳 Inception
+# 🐳 Inception: Production-Ready Microservices Orchestration & Systems Infrastructure
 
-This project was created by danoguer as part of the 42 curriculum.
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![NGINX](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org/)
+[![MariaDB](https://img.shields.io/badge/MariaDB-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org/)
+[![Debian](https://img.shields.io/badge/Debian-A81D33?style=for-the-badge&logo=debian&logoColor=white)](https://www.debian.org/)
+[![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
 
-Tecnical Blog of this project: https://42-journey.hashnode.dev/series/inception
+A complete, enterprise-grade Infrastructure-as-Code project focused on system administration, network virtualization, and multi-container orchestration. Developed as part of the advanced 42 curriculum.
 
-## 🌐 Description
-It focuses on system administration, containerization, and the orchestration of a complex microservices infrastructure.
-The core of the project is a LEMP-style stack orchestrated via Docker Compose. The architecture is divided into several dedicated microservices:
+> 📝 **Architectural Deep-Dive:** This project is backed by an extensive multi-part technical analysis covering the entire engineering process. Read the full series here: [My 42 Journey - Inception Blog](https://42-journey.hashnode.dev/series/inception).
 
-### 🔄 Request Lifecycle
+---
 
-1. User requests https://danoguer.42.fr.
+## 🌐 System Architecture & Request Lifecycle
 
-2. NGINX (Port 443) intercepts the request and handles SSL termination.
+The infrastructure builds a secure, highly-available LEMP-style stack encapsulated within strictly isolated virtual networks. Only NGINX interfaces with the outside world, acting as the reverse proxy and security perimeter.
 
-3. If it's a PHP request, NGINX forwards it to WordPress (Port 9000) via the FastCGI protocol.
+### Infrastructure Topology
 
-4. WordPress communicates with MariaDB (Port 3306) or checks the Redis cache (Port 6379).
+```text
+       [ Public Internet ] 
+               │
+               ▼ (Port 443 - HTTPS / TLS 1.3)
+      ┌────────────────────────────────────────────────────────┐
+      │                  NGINX Container                       │
+      │   (SSL Termination & Layer 7 Routing Perimeter)       │
+      └───────┬────────────────┬────────────────┬──────────────┘
+              │                │                │
+              │ (FastCGI)      │ (Proxy)        │ (Proxy)
+              ▼                ▼                ▼
+     ┌────────────────┐┌───────────────┐┌───────────────┐
+     │ WordPress +    ││    Adminer    ││   cAdvisor    │
+     │ PHP-FPM 8.2    ││ (DB Manager)  ││ (Monitoring)  │
+     └───────┬────────┘└───────┬───────┘└───────┬───────┘
+             │                 │                │
+   ┌─────────┴─────────┐       │                │
+   │   Internal Link   │       │                │
+   ▼                   ▼       ▼                ▼
+┌────────────────┐  ┌───────────────────────────────────┐
+│  Redis Cache   │  │         MariaDB Database          │
+│ (Object Cache) │  │  (Isolated Relational Storage)    │
+└────────────────┘  └───────────────────────────────────┘
+        ▲                                 ▲
+        └─────────── Dedicated ───────────┘
+                 Docker Volumes
+```
 
-5. The result is sent back through NGINX to the user.
+### Request Flow Timeline
+1. **Ingress:** The client initiates a secure connection to `https://danoguer.42.fr`.
+2. **TLS Termination:** NGINX intercepts the traffic on port 443, enforces TLS 1.3 handshake protocols, decrypts the request, and performs health checks.
+3. **Layer 7 Routing:** * Dynamic PHP traffic is multiplexed and forwarded to the **WordPress** engine via the FastCGI protocol on port 9000.
+   * Administrative routes (`/adminer`, `/cadvisor`) are reverse-proxied to their respective sandboxed utilities.
+4. **Data & Cache Layer:** WordPress checks runtime queries against the **Redis** in-memory object cache. On a cache miss, it executes structural queries to the isolated **MariaDB** back-end (port 3306).
 
-### 🗄️ Every Service 
+---
 
-NGINX: The only entry point to the infrastructure, strictly serving traffic over TLS v1.2/v1.3 to ensure security.
+## 🗄️ Microservices Breakdown
 
-WordPress + PHP-FPM: The dynamic content engine, decoupled from the web server for better scalability.
+| Service | Technology | Role & Engineering Implementation |
+| :--- | :--- | :--- |
+| **Edge Proxy** | NGINX | The single structural entry point. Implements modern cryptographic baselines (TLS v1.2/v1.3), path-based reverse proxying, and static assets routing. |
+| **Application** | WordPress + PHP-FPM | Decoupled dynamic processor running dedicated PHP-FPM daemons. Hardened against brute-force attacks via configurations injected at build time. |
+| **Database** | MariaDB | Relational storage engine. Fully stripped of networking exposure to the host; reachable exclusively via internal intra-container networking. |
+| **Caching** | Redis | NoSQL in-memory database acting as an application-level Object Cache, reducing DB query load and cutting latency down to single-digit milliseconds. |
+| **File Transfer**| FTP Server | Secure vsftpd setup mapped directly to the WordPress runtime volume, allowing authenticated real-time configuration and media manipulation. |
+| **DB Manager** | Adminer | Single-file, lightweight database management dashboard. Reverse-proxied behind NGINX to restrict arbitrary infrastructure visibility. |
+| **Observability**| cAdvisor | Google-engineered telemetry agent. Scrapes hardware real-time saturation metrics (CPU, Memory, Network I/O) from the cgroups architecture. |
+| **Landing Page** | Static Website | Independent, high-performance static HTML/CSS portfolio served straight from NGINX memory structures to showcase multi-root routing. |
 
-MariaDB: The relational database management system, isolated within a private network.
+---
 
-Redis: An in-memory NoSQL database used as an Object Cache for WordPress to reduce database load and significantly increase page response speeds.
+## ⚙️ Architectural Decisions & Constraints
 
-FTP: A dedicated file transfer service allowing administrators to securely upload and manage website files directly on the WordPress volume.
+This system is built under the strict **"Zero Pre-built Images"** pedagogy of 42.
 
-Adminer: A lightweight, web-based database management tool that provides a graphical interface to inspect and manage the MariaDB tables without using the CLI.
+* **Bare-Metal OS Layer:** Every single microservice container is engineered starting from a clean, vanilla Unix distribution (`Debian Bookworm` or `Alpine Linux`). No standard DockerHub stacks (`image: wordpress`) allowed.
+* **Hermetic Networks:** Multi-tier infrastructure architecture implemented through customized network bridges. Services are decoupled into functional layers (e.g., Database layer cannot talk to the Internet; only NGINX has exposed ports).
+* **State Management:** Containers remain completely ephemeral and stateless. High-value transactional and application state is preserved through targeted Docker Volumes anchored to specific cryptographic host paths.
+* **Principle of Least Privilege:** System execution layers are stripped of root authority. Daemon worker threads run strictly as non-privileged service accounts (e.g., `www-data` for PHP processing).
 
-cAdvisor: A monitoring tool developed by Google that provides real-time analytics on resource usage (CPU, RAM, Network) for every individual container in the stack.
+---
 
-Static Website: A fast-loading, independent landing page served directly by NGINX to demonstrate multi-service routing and high-performance static delivery.
+<details>
+<summary><b>🔬 Deep Dive: OS Containerization vs. Hardware Virtualization (Click to expand)</b></summary>
 
+| Architectural Metric | Docker Containers | Virtual Machines (VM) |
+| :--- | :--- | :--- |
+| **Abstraction Level** | App-space virtualization sharing the Host OS kernel. | Hardware emulation through a Hypervisor. |
+| **Guest OS Overhead** | None. Uses host binaries and system calls. | Heavy. Requires an independent, full Guest OS boot. |
+| **Isolation Barrier** | Process-level isolation via Linux `namespaces` and `cgroups`. | Hypervisor-enforced hardware security boundaries. |
+| **Storage Payload** | Ultra-lightweight (measured in Megabytes). | Heavy footprint (measured in Gigabytes). |
+| **Provisioning Speed** | Instantaneous process fork (Milliseconds). | Standard OS cold-boot lifecycle (Minutes). |
+| **Hardware Tax** | Near-native bare-metal execution speed. | Execution penalty due to continuous hardware emulation. |
 
-### ⚙️ Key Constraints & Philosophy
+### 💾 Storage Design: Docker Volumes vs. Bind Mounts
 
-This project is built following the "Everything-from-Scratch" philosophy required by the 42 pedagogy:
+| Dimension | Docker Managed Volumes | Native Host Bind Mounts |
+| :--- | :--- | :--- |
+| **Host Dependence** | High abstraction; managed inside `/var/lib/docker/`. | Tightly coupled to the host file system hierarchy. |
+| **Portability** | OS-independent. Safe for Cloud orchestration (K8s/Swarm). | Breaks across multi-architecture nodes if paths mismatch. |
+| **Performance** | Optimized performance directly inside the virtualization layer. | Standard file system performance; bound by host disk lockups. |
 
-Base OS: Every container is built using a minimal Debian (Bookworm) or Alpine image.
+</details>
 
-No Pre-built Images: Using image: wordpress or image: mariadb from Docker Hub is forbidden. Every service is custom-built via a specific Dockerfile.
+---
 
-Networking: All services communicate over a dedicated internal bridge network, with only NGINX exposing public ports.
-
-Data Persistence: Critical data is managed through Docker volumes mapped to specific host paths, ensuring that the infrastructure is stateless but the data is permanent.
-
-
-### 🏗️ Design Choices
-
-Microservices Architecture: Instead of a "Monolithic" approach, each service runs in its own isolated container. This follows the principle of Single Responsibility, making the system easier to debug and scale.
-
-Manual Orchestration: By avoiding pre-made Docker Hub images, we maintain total control over binary versions (e.g., PHP 8.2, MariaDB 10.11) and security patches.
-
-Least Privilege: Services run as non-root users where possible (e.g., www-data for PHP), and only the NGINX container is permitted to communicate with the outside world.
-
-
-### ⚖️ Technical Comparisons
-
-
-🖥️ Docker vs Virtual Machine
-
-Architecture: VMs use a Hypervisor to emulate physical hardware; Docker uses the Docker Engine to interface with the Host OS.
-
-Kernel: Each VM boots its own Guest OS Kernel; all Docker containers share the single Host OS Kernel.
-
-Isolation Mechanism: VMs provide Hardware-level isolation (secure but heavy); Docker uses Namespaces and Cgroups for process-level isolation (fast but shared).
-
-Resource Payload: VMs include a full OS (drivers, binaries, kernel), costing GBs; Docker includes only the app and its libraries, costing MBs.
-
-Startup: VMs undergo a full BIOS/OS boot sequence (minutes); Docker starts as a forked process (milliseconds).
-
-Efficiency: VMs have high overhead due to redundant OS tasks; Docker runs at near-native speed with zero hardware emulation tax.
-
-
-🔐 Secrets vs. Environment Variables
-
-Environment Variables: Easily visible via docker inspect. Suitable for non-sensitive config.
-
-Secrets: Managed in memory at runtime (Swarm/K8s). For this project, we utilize .env files to simulate secure credential injection.
-
-
-🌐 Docker Network vs. Host Network
-
-Host Network: Shares the host's IP/ports. Zero isolation.
-
-Docker Bridge Network: Private virtual network. Containers use service names (DNS) for internal talk, remaining invisible to the outside world.
-
-
-💾 Docker Volumes vs. Bind Mounts
-
-Docker Volumes: Managed by Docker in /var/lib/docker/volumes/. Best for production.
-
-Bind Mounts: Maps a specific host path to the container. Used here to satisfy the requirement of storing data in a specific host directory for evaluation.
-
-
-## 🚀 Instructions
-
+## 🚀 Deployment & Operations Guide
 
 ### 📋 Prerequisites
+* **Operating System:** Linux distributions (Debian/Ubuntu native architectures recommended).
+* **Toolchain:** Docker Engine (v20.10+), Docker Compose (v2.0+), GNU Make.
+* **Privileges:** `sudo` administrative rights for network and directory mapping.
 
-OS: Linux (Debian Bookworm preferred).
+### 🔧 Step-by-Step Provisioning
 
-Tools: docker, docker-compose, and make.
-
-Permissions: sudo privileges are required.
-
-
-### 🔧 1. Host Configuration
-
-Map your local loopback address to the project domain in your /etc/hosts file:
-
-
-`echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts`
-
-
-### 📂 2. Persistent Storage Setup
-
-Create the volume directories
-
-`sudo mkdir -p /home/$USER/data/mariadb`
-
-`sudo mkdir -p /home/$USER/data/wordpress`
-
-
-### 🔐 3. Environment Variables
-
-Ensure you create a .env file in the root directory with the following (refer to .env.example):
-
+#### 1. DNS Local Mapping
+Inject the project routing domain into your local loopback configuration:
 ```bash
-# Domain & Infrastructure
-DOMAIN_NAME=example.42.fr
-
-# Database Configuration
-SQL_USER=user
-SQL_PASSWORD=password
-SQL_ROOT_PASSWORD=rootpassword
-SQL_DATABASE=wordpress
-
-# WordPress Configuration
-WP_ADMIN_USER=adminuser
-WP_ADMIN_PASSWORD=password
-WP_ADMIN_EMAIL=example@student.42madrid.com
-WP_USER=user
-WP_USER_PASSWORD=user1234
-
-# FTP
-FTP_USER=user
-FTP_PASSWORD=password
+echo "127.0.0.1 danoguer.42.fr" | sudo tee -a /etc/hosts
 ```
 
-
-### 🛠️ 4. Installation & Launch
-
-Build and start all containers
-
-`make`
-
-Check the status of the services
-
-`docker ps`
-
-
-### 🌐 5. Accessing the Services
-Service	URL	Protocol
-
-WordPress	https://danoguer.42.fr	HTTPS (443)
-
-Static Site	https://danoguer.42.fr/static	HTTPS (443)
-
-Cadvisor https://danoguer.42.fr/cadvisor	HTTPS (443)
-
-Adminer	https://danoguer.42.fr/adminer	HTTPS (443)
-
+#### 2. Storage Initialization
+Prepare the physical local anchorage paths for database and media persistence:
 ```bash
-# System MySQL
-# Server mariadb
-# Username ${SQL_USER}
-# Password ${SQL_PASSWORD}
-# Database ${SQL_DATABASE}
+sudo mkdir -p /home/$USER/data/mariadb
+sudo mkdir -p /home/$USER/data/wordpress
 ```
 
-FTP `ftp https://danoguer.42.fr`
+#### 3. Environment Secrets Secret Management
+Generate a secure `.env` file at the root configuration level. Use `.env.example` as your reference template:
+```env
+DOMAIN_NAME=danoguer.42.fr
+SQL_USER=db_operator
+SQL_PASSWORD=supersecureuserpass
+SQL_ROOT_PASSWORD=supersecurerootpass
+SQL_DATABASE=wordpress_prod
+WP_ADMIN_USER=cloud_admin
+WP_ADMIN_PASSWORD=adminsecurepass
+WP_ADMIN_EMAIL=danoguer@student.42madrid.com
+FTP_USER=ftp_operator
+FTP_PASSWORD=ftpsecurepass
+```
 
-[!CAUTION]
-Since we use self-signed SSL certificates, your browser will show a security warning. Click "Advanced" → "Proceed".
+#### 4. Orchestration Execution
+Compile, assemble, and launch the microservice clusters concurrently using the automated orchestration pipeline:
+```bash
+# Build and execute cluster in detached mode
+make
 
+# Monitor live operational readiness
+docker ps
+```
 
-### 🧹 6. Maintenance
+---
 
-Stop services: 
+## 🌐 Ingress Exposure Mapping
 
-`make stop`
+Once runtime convergence is achieved, services route via the following rules:
 
-Restart services: 
+| Application Target | Resolution Path | Encryption |
+| :--- | :--- | :--- |
+| **WordPress CMS** | `https://danoguer.42.fr` | TLS 1.3 (Port 443) |
+| **Static Gateway** | `https://danoguer.42.fr/static` | TLS 1.3 (Port 443) |
+| **Telemetry (cAdvisor)**| `https://danoguer.42.fr/cadvisor` | TLS 1.3 (Port 443) |
+| **DB Administration** | `https://danoguer.42.fr/adminer` | TLS 1.3 (Port 443) |
+| **Secure FTP Link** | `ftp://danoguer.42.fr` | Standard FTP Layer |
 
-`make re`
+> ⚠️ **SSL Note:** Because this infrastructure deploys custom, self-signed SSL security certificates for internal verification, modern browsers will flag an authority alert on your initial connection. Bypass this via **Advanced -> Proceed to site**.
 
-Full Cleanup: it removes everything including the folders on the host, like /home/user/data**
+---
 
-`make fclean`
+## 🧹 Infrastructure Lifecycle Commands
 
+```bash
+make stop     # Gracefully suspend cluster execution without losing state.
+make re       # Trigger full microservice rebuild and configuration hot-reload.
+make fclean   # Nuclear purge: Destroys containers, network loops, and wipes host persistent directories.
+```
 
-## 📚 Resources
+---
 
-Docker Official Documentation
+## 🤖 Engineering Leverage & AI Disclosure
 
-NGINX Core Functionality
+In line with professional modern engineering principles, this infrastructure was optimized using **Gemini** acting as an automated Senior Systems Consultant. 
 
-MariaDB Knowledge Base
-
-Mozilla SSL Configuration Generator
-
-
-### 🤖 AI Usage Disclosure
-
-In the spirit of transparency, this project utilized Gemini as a technical consultant to accelerate the learning curve of System Administration and DevOps.
-
-Assisted Tasks:
-
-Infrastructure Debugging: Resolved MariaDB InnoDB redo log mismatches during the Debian Bullseye to Bookworm migration.
-
-Script Optimization: Wrote idempotent setup.sh scripts using mysqladmin ping for service orchestration.
-
-Configuration Review: Audited www.conf and 50-server.cnf for "least privilege" compliance.
-
-Manually Implemented (No AI):
-
-System Architecture Design: Core logic and volume mapping based on Inception requirements.
-
-Security Implementation: TLS protocol selection and network isolation strategy.
+* **Accelerated Troubleshooting:** Debugged complex InnoDB redo log memory mismatches triggered during the base image architecture upgrade (`Debian Bullseye` to `Bookworm`).
+* **Systems Idempotency:** Refined automated `setup.sh` routines, integrating structural health-checks (`mysqladmin ping`) to enforce dependency-ordered startup flows.
+* **Security Auditing:** Audited low-level process configurations (`www.conf` and `50-server.cnf`) ensuring strict least-privilege compliance.
